@@ -1,6 +1,6 @@
 streamlit
-nsepython==0.0.967
+requests
 plotly
 pandas
 numpy
-requests
+feedparser
