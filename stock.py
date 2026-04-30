@@ -78,7 +78,9 @@ def get_data(symbol):
         return df, info, q
     except Exception as e:
         st.error(f"Connection Error: {str(e)}")
-        return None, None, None
+            return None, None, None
+
+mode = st.selectbox("Select Mode", ["TERMINAL", "CHART"], label_visibility="collapsed")
 
 if mode == "TERMINAL":
     col1, col2, col3 = st.columns([2,2,1])
