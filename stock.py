@@ -86,7 +86,7 @@ def get_data(symbol):
         return None, None
 
 def nexus_signal(df, info):
-    """FinVista Nexus AI Signal - Duniya me kahin nahi milega"""
+    # FinVista Nexus AI Signal
     score = 0
     signals = []
     
