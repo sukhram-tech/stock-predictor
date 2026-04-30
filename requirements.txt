@@ -1,6 +1,5 @@
 streamlit
-requests
-plotly
 pandas
-numpy
-feedparser
+plotly
+requests
+ta
