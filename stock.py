@@ -41,12 +41,14 @@ SYMBOL_MAP = {
     "MSFT": "MSFT", "GOOGL": "GOOGL", "BTC/USD": "BTC/USD", "ETH/USD": "ETH/USD"
 }
 
-mode = st.selectbox("", ["TERMINAL", "MARKET SCAN", "GLOBAL COMPARE", "AI FORECAST"], label_visibility="collapsed")
-
-        # Fix for Indian Stocks - Twelve Data ko .NS chahiye
+@st.cache_data(ttl=600)
+def get_data(symbol):
+    try:
+        sym = symbol.upper().strip()
         indian_stocks = ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK", "SBIN", "ADANIENT", "TATAMOTORS", "ITC", "WIPRO"]
         if sym in indian_stocks:
             sym = sym + ".NS"
+        
         url = f"https://api.twelvedata.com/time_series?symbol={sym}&interval=1day&outputsize=365&apikey={API_KEY}"
         r = requests.get(url, timeout=15).json()
         if "values" not in r or r.get("status") == "error":
