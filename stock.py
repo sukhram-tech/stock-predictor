@@ -17,17 +17,22 @@ st.markdown("""
     .stMetric {background-color: #262730; padding: 15px; border-radius: 10px; border: 1px solid #3d3d5c;}
     .stButton>button {background-color: #00C853; color: white; border-radius: 8px; font-weight: bold;}
     h1 {color: #00C853; text-align: center;}
-</style>
-""", unsafe_allow_html=True)
-
-# --- FUNCTIONS ---
-@st.cache_data(ttl=300)
 def get_data(symbol):
     try:
         sym = symbol.upper().strip()
-        indian_stocks = ["RELIANCE","TCS","INFY","HDFCBANK","ICICIBANK","SBIN","ADANIENT","TATAMOTORS","ITC","WIPRO","LT","AXISBANK","KOTAKBANK","BAJFINANCE","MARUTI","HCLTECH","ASIANPAINT","SUNPHARMA","TITAN","ULTRACEMCO","NIFTY","SENSEX","BANKNIFTY"]
+        
+        # Agar user ne .NS daal diya to hata do, hum khud lagayenge
+        sym = sym.replace(".NS", "")
+        
+        # Fix for Indian Stocks - Twelve Data ko .NS chahiye
+        indian_stocks = ["RELIANCE","TCS","INFY","HDFCBANK","ICICIBANK","SBIN","ADANIENT","TATAMOTORS","ITC","WIPRO","LT","AXISBANK","KOTAKBANK","BAJFINANCE","MARUTI","HCLTECH","ASIANPAINT","SUNPHARMA","TITAN","ULTRACEMCO","BANKNIFTY"]
+        
         if sym in indian_stocks:
             sym = sym + ".NS"
+        elif sym == "SENSEX":
+            sym = "BSE:SENSEX"
+        elif sym == "NIFTY":
+            sym = "NSE:NIFTY"
         elif sym == "SENSEX":
             sym = "BSE:SENSEX"
         elif sym == "NIFTY":
