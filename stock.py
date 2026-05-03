@@ -18,16 +18,13 @@ def get_data(symbol):
         indian_stocks = ["RELIANCE","TCS","INFY","HDFCBANK","ICICIBANK","SBIN","ADANIENT","TATAMOTORS","ITC","WIPRO","LT","AXISBANK","KOTAKBANK","BAJFINANCE","MARUTI","HCLTECH","ASIANPAINT","SUNPHARMA","TITAN","ULTRACEMCO","BANKNIFTY"]
         if sym in indian_stocks:
             sym = sym + ".NS"
-            sym = sym.strip()  # Extra space hata dega
-st.write(f"Debug: Searching for {sym}")  # Check karne ke liye
-        elif sym == "SENSEX":
-            sym = "BSE:SENSEX"
         elif sym == "NIFTY":
-             sym = "NIFTY 50"
+            sym = "NIFTY 50"
         elif sym == "SENSEX":
             sym = "SENSEX"
         elif sym == "BANKNIFTY":
             sym = "NIFTY BANK"
+        
         url = f"https://api.twelvedata.com/time_series?symbol={sym}&interval=1day&outputsize=500&apikey={API_KEY}"
         r = requests.get(url).json()
         if "status" in r and r["status"] == "error":
@@ -116,54 +113,3 @@ def plot_advanced_chart(df, symbol, info):
     fig.update_layout(template="plotly_dark", height=800, showlegend=True, xaxis_rangeslider_visible=False, hovermode='x unified')
     fig.update_yaxes(title_text="Price", row=1, col=1)
     fig.update_yaxes(title_text="RSI", range=[0,100], row=2, col=1)
-    fig.update_yaxes(title_text="MACD", row=3, col=1)
-    st.plotly_chart(fig, use_container_width=True)
-
-st.title("FinVista Nexus V2.0 💎")
-st.caption("AI-Powered Stock Analysis - Duniya ka sabse tez signal system")
-
-if 'watchlist' not in st.session_state:
-    st.session_state.watchlist = ["RELIANCE", "TCS", "NIFTY"]
-if 'ticker' not in st.session_state:
-    st.session_state.ticker = "RELIANCE"
-
-st.sidebar.header("📌 My Watchlist")
-for stock in st.session_state.watchlist:
-    if st.sidebar.button(stock, key=f"wl_{stock}"):
-        st.session_state.ticker = stock
-
-col1, col2, col3 = st.columns([3,1,1])
-with col1:
-    ticker = st.text_input("Stock Symbol Daalo", value=st.session_state.get('ticker', 'RELIANCE'), placeholder="RELIANCE, TCS, AAPL, NIFTY, SENSEX", label_visibility="collapsed")
-with col2:
-    if st.button("🔍 ANALYZE", use_container_width=True):
-        st.session_state.ticker = ticker.upper()
-with col3:
-    if st.button("⭐ ADD", use_container_width=True):
-        if ticker.upper() not in st.session_state.watchlist:
-            st.session_state.watchlist.append(ticker.upper())
-            st.rerun()
-
-if st.session_state.get('ticker'):
-    with st.spinner('Nexus AI data la raha hai...'):
-        df, info = get_data(st.session_state.ticker)
-    if df is not None:
-        st.subheader(f"{info['name']}")
-        m1, m2, m3, m4, m5 = st.columns(5)
-        m1.metric("LTP", f"₹{info['close']:.2f}", f"{info['percent_change']:.2f}%")
-        m2.metric("Open", f"₹{info['open']:.2f}")
-        m3.metric("High", f"₹{info['high']:.2f}")
-        m4.metric("Low", f"₹{info['low']:.2f}")
-        m5.metric("Volume", f"{info['volume']:,}")
-        verdict, color, score, signals = nexus_signal(df, info)
-        st.markdown(f"<h2 style='text-align: center; color: {color};'>NEXUS SIGNAL: {verdict} | Score: {score}/10</h2>", unsafe_allow_html=True)
-        with st.expander("🧠 AI Signal Breakdown - Kyun Ye Signal Aaya"):
-            for signal in signals:
-                st.write(signal)
-            st.info("Disclaimer: Ye educational analysis hai. Investment advice nahi hai. Risk aapka hai.")
-        plot_advanced_chart(df, st.session_state.ticker, info)
-        with st.expander("📊 Last 20 Days Data"):
-            st.dataframe(df.tail(20)[['open','high','low','close','volume','RSI']].round(2))
-else:
-    st.info("👆 Upar stock ka naam daalo aur ANALYZE dabao. Example: RELIANCE, NIFTY, AAPL")
-    st.warning("⚠️ Ye tool sirf learning ke liye hai. Real trading se pehle expert se salah lo.")
