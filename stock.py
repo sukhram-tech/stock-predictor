@@ -18,6 +18,8 @@ def get_data(symbol):
         indian_stocks = ["RELIANCE","TCS","INFY","HDFCBANK","ICICIBANK","SBIN","ADANIENT","TATAMOTORS","ITC","WIPRO","LT","AXISBANK","KOTAKBANK","BAJFINANCE","MARUTI","HCLTECH","ASIANPAINT","SUNPHARMA","TITAN","ULTRACEMCO","BANKNIFTY"]
         if sym in indian_stocks:
             sym = sym + ".NS"
+            sym = sym.strip()  # Extra space hata dega
+st.write(f"Debug: Searching for {sym}")  # Check karne ke liye
         elif sym == "SENSEX":
             sym = "BSE:SENSEX"
         elif sym == "NIFTY":
