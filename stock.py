@@ -21,7 +21,11 @@ def get_data(symbol):
         elif sym == "SENSEX":
             sym = "BSE:SENSEX"
         elif sym == "NIFTY":
-            sym = "NSE:NIFTY"
+             sym = "NIFTY 50"
+        elif sym == "SENSEX":
+            sym = "SENSEX"
+        elif sym == "BANKNIFTY":
+            sym = "NIFTY BANK"
         url = f"https://api.twelvedata.com/time_series?symbol={sym}&interval=1day&outputsize=500&apikey={API_KEY}"
         r = requests.get(url).json()
         if "status" in r and r["status"] == "error":
