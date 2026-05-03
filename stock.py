@@ -155,4 +155,4 @@ else:
     st.info("👆 Upar box me stock ka naam daalo aur ANALYZE dabao. Example: RELIANCE, TCS, NIFTY")
 
 st.markdown("---")
-st.markdown("<p style='text-align: center; color: #555;'>Built with ❤️ by Harsh | FinVista Nexus V2.0</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #555;'>Built with ❤️ by sukhram kashyap | FinVista Nexus V2.0</p>", unsafe_allow_html=True)
