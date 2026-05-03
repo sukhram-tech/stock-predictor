@@ -5,10 +5,10 @@ from plotly.subplots import make_subplots
 import requests
 import ta
 
-st.set_page_config(page_title="FinVista Nexus V2", layout="wide", page_icon="📈")
+st.set_page_config(page_title="FinVista Nexus V2", layout="wide", page_icon="💎")
 API_KEY = "1bc0db9c325f481280365f8a685740c2"
 
-st.markdown("<style>.main {background-color: #0E1117;} .stMetric {background-color: #262730; padding: 15px; border-radius: 10px; border: 1px solid #3d3d5c;} .stButton>button {background-color: #00C853; color: white; border-radius: 8px; font-weight: bold;} h1 {color: #00C853; text-align: center;}</style>", unsafe_allow_html=True)
+st.markdown("<style>.main {background-color: #0E1117;} .stMetric {background-color: #262730; padding: 15px; border-radius: 10px; border: 1px solid #3d3d5c;} .stButton>button {background-color: #00C853; color: white; border-radius: 8px; font-weight: bold; width: 100%;} h1 {color: #00C853; text-align: center; font-size: 3em;} </style>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=300)
 def get_data(symbol):
@@ -99,7 +99,7 @@ def nexus_signal(df, info):
     return verdict, color, score, signals
 
 def plot_advanced_chart(df, symbol, info):
-    fig = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.05, row_heights=[0.6, 0.2, 0.2], subplot_titles=(f'{symbol} Price', 'RSI', 'MACD'))
+    fig = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.05, row_heights=[0.6, 0.2, 0.2], subplot_titles=(f'{symbol} Price Action', 'RSI - Momentum', 'MACD'))
     fig.add_trace(go.Candlestick(x=df.index, open=df['open'], high=df['high'], low=df['low'], close=df['close'], name='Price'), row=1, col=1)
     fig.add_trace(go.Scatter(x=df.index, y=df['EMA20'], line=dict(color='orange', width=1), name='EMA 20'), row=1, col=1)
     fig.add_trace(go.Scatter(x=df.index, y=df['EMA50'], line=dict(color='blue', width=1), name='EMA 50'), row=1, col=1)
@@ -110,6 +110,49 @@ def plot_advanced_chart(df, symbol, info):
     fig.add_hline(y=30, line_dash="dash", line_color="green", row=2, col=1)
     fig.add_trace(go.Scatter(x=df.index, y=df['MACD'], line=dict(color='blue', width=2), name='MACD'), row=3, col=1)
     fig.add_trace(go.Scatter(x=df.index, y=df['MACD_Signal'], line=dict(color='orange', width=2), name='Signal'), row=3, col=1)
-    fig.update_layout(template="plotly_dark", height=800, showlegend=True, xaxis_rangeslider_visible=False, hovermode='x unified')
-    fig.update_yaxes(title_text="Price", row=1, col=1)
+    fig.update_layout(template="plotly_dark", height=800, showlegend=True, xaxis_rangeslider_visible=False, hovermode='x unified', paper_bgcolor='#0E1117', plot_bgcolor='#0E1117')
+    fig.update_yaxes(title_text="Price ₹", row=1, col=1)
     fig.update_yaxes(title_text="RSI", range=[0,100], row=2, col=1)
+    fig.update_yaxes(title_text="MACD", row=3, col=1)
+    return fig
+
+st.markdown("<h1>FinVista Nexus V2.0 💎</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #888;'>AI-Powered Stock Analysis - Duniya ka sabse tez Nexus Signal System</p>", unsafe_allow_html=True)
+st.markdown("---")
+
+col1, col2, col3 = st.columns([3,1,1])
+with col1:
+    symbol = st.text_input("", placeholder="Stock Symbol Daalo: RELIANCE, TCS, NIFTY, AAPL", label_visibility="collapsed")
+with col2:
+    analyze = st.button("🔍 ANALYZE")
+with col3:
+    add_btn = st.button("⭐ ADD")
+
+if analyze and symbol:
+    with st.spinner('Nexus AI Data Fetch Kar Raha Hai...'):
+        df, info = get_data(symbol)
+        if df is not None:
+            verdict, color, score, signals = nexus_signal(df, info)
+            st.markdown(f"<h2 style='text-align: center; color: {color};'>{info['name']} - {verdict}</h2>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align: center;'>Nexus Score: <b>{score}/8</b></p>", unsafe_allow_html=True)
+            st.markdown("---")
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Price", f"₹{info['close']:.2f}", f"{info['percent_change']:.2f}%")
+            c2.metric("Day High", f"₹{info['high']:.2f}")
+            c3.metric("Day Low", f"₹{info['low']:.2f}")
+            c4.metric("Volume", f"{info['volume']:,}")
+            st.plotly_chart(plot_advanced_chart(df, info['name'], info), use_container_width=True)
+            st.subheader("📊 Nexus AI Breakdown")
+            for sig in signals:
+                st.write(sig)
+            st.subheader("💡 Key Levels")
+            d1, d2 = st.columns(2)
+            d1.metric("52 Week High", f"₹{info['high_52']:.2f}")
+            d2.metric("52 Week Low", f"₹{info['low_52']:.2f}")
+        else:
+            st.error("Data load nahi hua. Symbol sahi daalo aur try karo.")
+else:
+    st.info("👆 Upar box me stock ka naam daalo aur ANALYZE dabao. Example: RELIANCE, TCS, NIFTY")
+
+st.markdown("---")
+st.markdown("<p style='text-align: center; color: #555;'>Built with ❤️ by Harsh | FinVista Nexus V2.0</p>", unsafe_allow_html=True)
