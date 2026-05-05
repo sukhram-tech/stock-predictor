@@ -76,6 +76,82 @@ st.markdown("""
 def is_indian_stock(symbol):
     indian = ["RELIANCE","TCS","INFY","HDFCBANK","ICICIBANK","SBIN","ADANIENT","TATAMOTORS","ITC","WIPRO","LT","AXISBANK","KOTAKBANK","BAJFINANCE","MARUTI","HCLTECH","ASIANPAINT","SUNPHARMA","TITAN","ULTRACEMCO","NIFTY","SENSEX","BANKNIFTY","^NSEI","^BSESN","^NSEBANK"]
     return symbol.upper().replace(".NS","").replace("^","") in indian
+    import time
+
+@st.cache_data(ttl=600)  # ← 300 ko 600 kar de. 10 min tak cache rahega
+def get_data(symbol):
+    try:
+        time.sleep(1)  # ← Ye line add kar. Har request me 1 sec rukega
+        sym = symbol.upper().strip()
+        currency = "₹" if is_indian_stock(sym) else "$"
+        
+        if is_indian_stock(sym):
+            if sym == "NIFTY": ticker = "^NSEI"
+            elif sym == "SENSEX": ticker = "^BSESN"
+            elif sym == "BANKNIFTY": ticker = "^NSEBANK"
+            else: ticker = sym + ".NS"
+            stock = yf.Ticker(ticker)
+            df = stock.history(period="2y")
+            if df.empty: return None, None, "No data found. Try again after 2 minutes."
+            df = df.rename(columns={"Open":"open", "High":"high", "Low":"low", "Close":"close", "Volume":"volume"})
+            df.index.name = "datetime"
+            info = {
+                "name": stock.info.get("longName", symbol),
+                "close": df['close'].iloc[-1],
+                "percent_change": ((df['close'].iloc[-1] - df['close'].iloc[-2]) / df['close'].iloc[-2]) * 100,
+                "high": df['high'].iloc[-1], "low": df['low'].iloc[-1], "open": df['open'].iloc[-1],
+                "volume": int(df['volume'].iloc[-1]),
+                "high_52": df['high'].rolling(252).max().iloc[-1],
+                "low_52": df['low'].rolling(252).min().iloc[-1],
+                "market_cap": stock.info.get("marketCap", 0),
+                "pe_ratio": stock.info.get("trailingPE", 0),
+                "currency": currency
+            }
+        else:
+            # US stocks ka code same rakho
+            url = f"https://api.twelvedata.com/time_series?symbol={sym}&interval=1day&outputsize=500&apikey={API_KEY}"
+            r = requests.get(url).json()
+            if "status" in r and r["status"] == "error": return None, None, f"API Error: {r['message']}"
+            if "values" not in r: return None, None, "No data available"
+            df = pd.DataFrame(r["values"])
+            df["datetime"] = pd.to_datetime(df["datetime"])
+            df = df.set_index("datetime").sort_index().astype(float)
+            q_url = f"https://api.twelvedata.com/quote?symbol={sym}&apikey={API_KEY}"
+            q = requests.get(q_url).json()
+            info = {
+                "name": q.get("name", symbol), "close": float(q.get("close", 0)),
+                "percent_change": float(q.get("percent_change", 0)), "high": float(q.get("high", 0)),
+                "low": float(q.get("low", 0)), "open": float(q.get("open", 0)),
+                "volume": int(float(q.get("volume", 0))),
+                "high_52": float(q.get("fifty_two_week", {}).get("high", 0)),
+                "low_52": float(q.get("fifty_two_week", {}).get("low", 0)),
+                "market_cap": 0, "pe_ratio": 0,
+                "currency": currency
+            }
+        
+        # Baaki indicators ka code same rakho
+        df['EMA20'] = ta.trend.ema_indicator(df['close'], window=20)
+        df['EMA50'] = ta.trend.ema_indicator(df['close'], window=50)
+        df['EMA200'] = ta.trend.ema_indicator(df['close'], window=200)
+        df['RSI'] = ta.momentum.rsi(df['close'], window=14)
+        df['Stoch'] = ta.momentum.stoch(df['high'], df['low'], df['close'])
+        macd = ta.trend.MACD(df['close'])
+        df['MACD'] = macd.macd()
+        df['MACD_Signal'] = macd.macd_signal()
+        df['MACD_Hist'] = macd.macd_diff()
+        bb = ta.volatility.BollingerBands(df['close'])
+        df['BB_High'] = bb.bollinger_hband()
+        df['BB_Mid'] = bb.bollinger_mavg()
+        df['BB_Low'] = bb.bollinger_lband()
+        df['ATR'] = ta.volatility.average_true_range(df['high'], df['low'], df['close'])
+        df['VWAP'] = ta.volume.volume_weighted_average_price(df['high'], df['low'], df['close'], df['volume'])
+        df['OBV'] = ta.volume.on_balance_volume(df['close'], df['volume'])
+        
+        return df, info, None
+    except Exception as e:
+        if "Too Many Requests" in str(e) or "Rate" in str(e):
+            return None, None, "Yahoo Finance busy hai. 2 minute baad try karo."
+        return None, None, f"System Error: {str(e)}"
 
 @st.cache_data(ttl=300)
 def get_data(symbol):
@@ -354,4 +430,4 @@ else:
         st.markdown("**🇺🇸 US Markets:** AAPL, TSLA, MSFT, NVDA, GOOGL, AMZN, META")
 
 st.markdown("---")
-st.markdown(f"<p style='text-align: center; color: #474D57; font-size: 12px;'>FinVista Nexus AI V4.0 | Built with ❤️ by Harsh | Data as of {datetime.now().strftime('%d %b %Y, %H:%M IST')} | Educational Tool Only. Not Investment Advice. Trade at Your Own Risk.</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: #474D57; font-size: 12px;'>FinVista Nexus AI V4.0 | Built with ❤️ by Sukhram Kashyap | Data as of {datetime.now().strftime('%d %b %Y, %H:%M IST')} | Educational Tool Only. Not Investment Advice. Trade at Your Own Risk.</p>", unsafe_allow_html=True)
